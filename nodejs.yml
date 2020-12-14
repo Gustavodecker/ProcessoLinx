@@ -1,0 +1,43 @@
+---
+- hosts: producao
+  gather_facts: yes
+  become: yes
+  vars:
+    NODEJS_VERSION: "14"
+    node_apps_location: /home/ubuntu
+  tasks:
+    - name: Importa chave Nodejs 
+      apt_key:
+        url: "https://deb.nodesource.com/gpgkey/nodesource.gpg.key"
+        state: present
+
+    - name: Baixa instalador Nodejs
+      apt_repository:
+        repo: "deb https://deb.nodesource.com/node_{{ NODEJS_VERSION }}.x {{ ansible_distribution_release }} main"
+        state: present
+        update_cache: yes
+
+    - name: Instala Nodej
+      apt:
+        name: nodejs
+        state: present
+    
+    - name: PM2 executa continuamente
+      npm: name=pm2 global=yes state=present
+
+    - name: Cria diretorio do APP NodeJS
+      file: "path={{ node_apps_location }} state=directory"
+
+    - name: Copia arquivos JSON e aplicacoes NodeJS
+      copy: "src=app dest={{ node_apps_location }}"
+
+    - name: Instala as dependencias definidas no JSON (Express)
+      npm: "path={{ node_apps_location }}/app"
+
+    - name: Checa a lista de aplicao NodeJS - Running
+      command: forever list
+      register: forever_list
+      changed_when: false
+
+    - name: Inicia aplicacao NodeJS (Cluster) com o PM2
+      command: "pm2 start {{ node_apps_location }}/app/cluster.js --name monitor"

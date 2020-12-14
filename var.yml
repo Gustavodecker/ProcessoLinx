@@ -1,0 +1,7 @@
+#proxybalance.yml
+ip_externo = 18.218.77.151
+port1 = 3000
+port2 = 3001
+port3 = 3002
+
+#

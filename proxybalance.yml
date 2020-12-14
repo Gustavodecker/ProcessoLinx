@@ -1,0 +1,50 @@
+---
+- hosts: producao
+  gather_facts: yes
+  become: yes
+  tasks:
+    - name: Instala Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Desativa NGINX Default Virtual Host
+      command:
+       cmd: unlink /etc/nginx/sites-enabled/default
+
+    - name: Cria novo arquivo .conf para proxy reverso e load balancer
+      file:
+        path: /etc/nginx/sites-available/load_balancer.conf
+        state: touch
+
+    - name: Altera arquivo .conf criado
+      blockinfile:
+        path: /etc/nginx/sites-available/load_balancer.conf
+        marker: ""
+        block: |
+          upstream "{{ ip_externo }}" {
+             server localhost:"{{ port1 }}";
+             server localhost:"{{ port2 }}";
+             server localhost:"{{ port3 }}";
+          }
+
+          server {
+           listen 80;
+           server_name "{{ ip_externo }}";
+           location / {
+                        proxy_set_header Host $host;
+                        proxy_set_header X-Real-IP $remote_addr;
+                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                        proxy_pass "http://{{ ip_externo }}";
+           }
+          }
+ 
+    - name: linka o novo arquivo em sites-enable
+      command:
+       cmd: ln -s /etc/nginx/sites-available/load_balancer.conf /etc/nginx/sites-enabled/load_balancer.conf
+ 
+    - name: Sobe servico Nginx
+      service:
+        name: nginx
+        state: restarted
+        enabled: yes

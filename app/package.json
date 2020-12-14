@@ -1,0 +1,10 @@
+{
+  "name": "node-express",
+  "description": "",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.15.4"
+  },
+  "author": "Gustavo Miguel"
+}
+
