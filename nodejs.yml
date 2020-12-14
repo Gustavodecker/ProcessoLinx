@@ -34,10 +34,5 @@
     - name: Instala as dependencias definidas no JSON (Express)
       npm: "path={{ node_apps_location }}/app"
 
-    - name: Checa a lista de aplicao NodeJS - Running
-      command: forever list
-      register: forever_list
-      changed_when: false
-
-    - name: Inicia aplicacao NodeJS (Cluster) com o PM2
+    - name: Inicia aplicacao NodeJS (Cluster) com o PM2 (Faz o monitoramento e sobe servicos em caso de falhas)
       command: "pm2 start {{ node_apps_location }}/app/cluster.js --name monitor"
